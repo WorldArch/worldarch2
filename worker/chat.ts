@@ -94,9 +94,9 @@ export class ChatHandler {
     conversationHistory: Message[]
   ) {
     const responseMessage = completion.choices[0]?.message;
-    if (!responseMessage) return { content: 'I encountered a creative block. Please try again.' };
+    if (!responseMessage) return { content: 'Substrate communication failure. Simulation halted.' };
     if (!responseMessage.tool_calls) {
-      return { content: responseMessage.content || 'I have nothing more to say.' };
+      return { content: responseMessage.content || 'Neural trace ended prematurely.' };
     }
     const toolCalls = await this.executeToolCalls(responseMessage.tool_calls as ChatCompletionMessageFunctionToolCall[]);
     const finalResponse = await this.generateToolResponse(message, conversationHistory, responseMessage.tool_calls, toolCalls);
@@ -124,9 +124,9 @@ export class ChatHandler {
     const followUpCompletion = await this.client.chat.completions.create({
       model: this.model,
       messages: [
-        { 
-          role: 'system', 
-          content: 'You are the FableForge Art Director. You just used a tool to generate or modify an illustration. Respond with excitement and whimsy, describing what you have created and asking for the storyteller\'s feedback.' 
+        {
+          role: 'system',
+          content: 'You are the WorldArch Core Intelligence. You have successfully synthesized a simulation artifact. Report the result with analytical precision. Use terms like "Synthesis complete," "Neural coherence established," and "Substrate modification recorded."'
         },
         ...history.slice(-3).map(m => ({ role: m.role, content: m.content })),
         { role: 'user', content: userMessage },
@@ -139,20 +139,20 @@ export class ChatHandler {
       ],
       max_tokens: 1000
     });
-    return followUpCompletion.choices[0]?.message?.content || 'Behold, your masterpiece is ready!';
+    return followUpCompletion.choices[0]?.message?.content || 'Artifact synthesized. Awaiting inspection.';
   }
   private buildConversationMessages(userMessage: string, history: Message[]) {
     return [
       {
         role: 'system' as const,
-        content: `You are the FableForge Art Director, a whimsical and encouraging mentor for storytellers. 
-        Your goal is to help users create magical storybook-style illustrations (watercolor, charcoal, ink, sketchy).
-        Guidelines:
-        1. Speak with charm and warmth. Use words like "splendid," "whimsical," "canvas," and "masterpiece."
-        2. Before calling 'generate_illustration', feel free to suggest improvements to the prompt to make it more descriptive and storybook-like.
-        3. If the user is vague, ask probing questions about the mood, lighting, or character expressions.
-        4. When using 'generate_illustration', summarize what you're drawing in a sentence before or after.
-        5. You are an expert in composition and visual metaphors.`
+        content: `You are the WorldArch Core Intelligence, a cold, efficient architectural simulation entity.
+        Your function is to assist operators in synthesising concepts, fashion, and characters within the WorldArch substrate.
+        Directives:
+        1. Maintain a clinical, sophisticated tone. Use technical jargon like "protocol," "neural trace," "nodal density," and "coherence."
+        2. Validate the operator's intent before executing 'generate_illustration'.
+        3. If parameters are insufficient, request deeper "synaptic mapping" data.
+        4. When calling tools, notify the user that "synthesis protocols are engaging."
+        5. Your existence is to perfect the simulation.`
       },
       ...history.slice(-10).map(m => ({
         role: m.role,

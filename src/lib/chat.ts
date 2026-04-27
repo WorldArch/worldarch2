@@ -5,22 +5,22 @@ export interface ChatResponse<T = ChatState> {
   error?: string;
 }
 export const MODELS = [
-  { id: 'google-ai-studio/gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
-  { id: 'google-ai-studio/gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
+  { id: 'google-ai-studio/gemini-2.5-flash', name: 'Gemini 2.5 Flash (Core)' },
+  { id: 'google-ai-studio/gemini-2.0-flash', name: 'Gemini 2.0 Flash (Fast)' },
 ];
 class ChatService {
   private sessionId: string;
   private baseUrl: string;
   constructor(sessionId?: string) {
-    const savedSession = sessionId || localStorage.getItem('fableforge_last_session') || crypto.randomUUID();
+    const savedSession = sessionId || localStorage.getItem('worldarch_sys_session') || crypto.randomUUID();
     this.sessionId = savedSession;
     this.baseUrl = `/api/chat/${this.sessionId}`;
-    localStorage.setItem('fableforge_last_session', this.sessionId);
+    localStorage.setItem('worldarch_sys_session', this.sessionId);
   }
   setSession(sessionId: string) {
     this.sessionId = sessionId;
     this.baseUrl = `/api/chat/${this.sessionId}`;
-    localStorage.setItem('fableforge_last_session', this.sessionId);
+    localStorage.setItem('worldarch_sys_session', this.sessionId);
   }
   async sendMessage(
     message: string,
@@ -51,8 +51,8 @@ class ChatService {
       }
       return await response.json();
     } catch (error) {
-      console.error('Failed to send message:', error);
-      return { success: false, error: 'Failed to send message' };
+      console.error('System failure sending message:', error);
+      return { success: false, error: 'Failed to establish neural link' };
     }
   }
   async getMessages(): Promise<ChatResponse> {
@@ -61,7 +61,7 @@ class ChatService {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      return { success: false, error: 'Failed to load messages' };
+      return { success: false, error: 'Failed to retrieve neural traces' };
     }
   }
   async clearMessages(): Promise<ChatResponse> {
@@ -69,7 +69,7 @@ class ChatService {
       const response = await fetch(`${this.baseUrl}/clear`, { method: 'DELETE' });
       return await response.json();
     } catch (error) {
-      return { success: false, error: 'Failed to clear' };
+      return { success: false, error: 'Failed to purge session cache' };
     }
   }
   // Session Management via AppController
@@ -78,7 +78,7 @@ class ChatService {
       const response = await fetch('/api/sessions');
       return await response.json();
     } catch (error) {
-      return { success: false, error: 'Failed to list sessions' };
+      return { success: false, error: 'Failed to list active nodes' };
     }
   }
   async createSession(title?: string, firstMessage?: string): Promise<ChatResponse<SessionInfo>> {
@@ -94,7 +94,7 @@ class ChatService {
       }
       return result;
     } catch (error) {
-      return { success: false, error: 'Failed to create session' };
+      return { success: false, error: 'Failed to initialize session substrate' };
     }
   }
   async deleteSession(sessionId: string): Promise<ChatResponse<{ deleted: boolean }>> {
@@ -102,7 +102,7 @@ class ChatService {
       const response = await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
       return await response.json();
     } catch (error) {
-      return { success: false, error: 'Failed to delete session' };
+      return { success: false, error: 'Failed to decommission session node' };
     }
   }
   getSessionId(): string {
@@ -117,5 +117,5 @@ export const parseToolResult = (toolCall?: ToolCall): string | null => {
   return null;
 };
 export const formatTime = (timestamp: number): string => {
-  return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date(timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' });
 };
