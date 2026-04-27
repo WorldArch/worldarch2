@@ -12,21 +12,7 @@ export function CharacterGrid() {
       return { x: newX, y: newY };
     });
   }, []);
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
-      if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
-      if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
-      if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [movePlayer]);
-  useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 50);
-    return () => clearInterval(interval);
-  }, []);
-  const getCellType = (x: number, y: number): CellType => {
+  const getCellType = useCallback((x: number, y: number): CellType => {
     if (x === playerPos.x && y === playerPos.y) return 'player';
     if (y === 0) return 'goal';
     // Row Logic for Obstacles
@@ -43,36 +29,51 @@ export function CharacterGrid() {
       return isHazard ? 'hazard' : 'neutral';
     }
     return 'neutral';
-  };
+  }, [playerPos.x, playerPos.y, tick]);
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
+      if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
+      if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
+      if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [movePlayer]);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 50);
+    return () => clearInterval(interval);
+  }, []);
   // Collision detection
   useEffect(() => {
     const type = getCellType(playerPos.x, playerPos.y);
-    if (type === 'hazard' || (playerPos.y > 0 && playerPos.y < 8 && type === 'neutral' && (playerPos.y % 2 === 0))) {
-      // Collision with hazard or falling into gap in stream rows (even rows)
+    // Hazard collision or missing stream on water rows
+    const isWaterRow = playerPos.y === 2 || playerPos.y === 4 || playerPos.y === 6;
+    if (type === 'hazard' || (isWaterRow && type === 'neutral')) {
       setPlayerPos({ x: 12, y: 8 });
     }
     if (type === 'goal') {
       alert("SYNTHESIS_REACHED: COHERENCE_STABLE");
       setPlayerPos({ x: 12, y: 8 });
     }
-  }, [tick, playerPos.x, playerPos.y]);
+  }, [tick, playerPos.x, playerPos.y, getCellType]);
   return (
     <div className="flex flex-col items-center gap-4 bg-black p-4 border border-cyber-green/20">
-      <div className="grid grid-cols-24 gap-1 w-fit bg-system-n">
+      <div className="grid grid-cols-24 gap-px w-fit bg-cyber-green/5 p-1 border border-cyber-green/10">
         {Array.from({ length: ROWS }).map((_, y) => (
-          <React.Fragment key={y}>
+          <React.Fragment key={`row-${y}`}>
             {Array.from({ length: COLS }).map((_, x) => {
               const type = getCellType(x, y);
               let bgColor = 'bg-neutral-900';
-              if (type === 'player') bgColor = 'grid-p';
-              if (type === 'goal') bgColor = 'grid-p opacity-40';
+              if (type === 'player') bgColor = 'grid-p shadow-[0_0_10px_#55FF55]';
+              if (type === 'goal') bgColor = 'grid-p opacity-20';
               if (type === 'hazard') bgColor = 'grid-h';
-              if (type === 'stream') bgColor = 'grid-s';
-              if (type === 'neutral') bgColor = 'bg-[#111]';
+              if (type === 'stream') bgColor = 'grid-s opacity-80';
+              if (type === 'neutral') bgColor = 'bg-[#0a0a0a]';
               return (
-                <div 
-                  key={`${x}-${y}`} 
-                  className={`w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center text-[10px] ${bgColor}`}
+                <div
+                  key={`cell-${x}-${y}`}
+                  className={`w-3 h-3 sm:w-5 sm:h-5 md:w-6 md:h-6 flex items-center justify-center text-[10px] transition-colors duration-150 ${bgColor}`}
                 >
                   {type === 'player' ? '█' : ''}
                 </div>
@@ -81,9 +82,9 @@ export function CharacterGrid() {
           </React.Fragment>
         ))}
       </div>
-      <div className="flex justify-between w-full max-w-md font-mono text-[10px] opacity-60">
-        <span>MODE: NEURAL_FROGGER</span>
-        <span>POS: {playerPos.x},{playerPos.y}</span>
+      <div className="flex justify-between w-full max-w-md font-mono text-[9px] uppercase tracking-wider opacity-60">
+        <span className="text-cyber-pink">Mode: Neural_Frogger_V4</span>
+        <span className="text-cyber-green">Pos: {playerPos.x.toString().padStart(2, '0')},{playerPos.y.toString().padStart(2, '0')}</span>
       </div>
     </div>
   );

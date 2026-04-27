@@ -4,6 +4,9 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      gridTemplateColumns: {
+        '24': 'repeat(24, minmax(0, 1fr))',
+      },
       fontFamily: {
         mono: ['"IBM Plex Mono"', 'monospace'],
         sans: ['"IBM Plex Mono"', 'monospace'],
@@ -49,6 +52,7 @@ export default {
         glitch: 'glitch 0.3s cubic-bezier(.25,.46,.45,.94) both infinite',
         scanline: 'scanline 8s linear infinite',
         'pulse-fast': 'pulse-fast 1s ease-in-out infinite',
+        'spin-slow': 'spin 8s linear infinite',
       }
     }
   },
