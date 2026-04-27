@@ -53,12 +53,25 @@
   .sketchy-shake:hover {
     animation: sketchy-shake 0.4s ease-in-out infinite;
   }
+  .canvas-texture {
+    background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+    pointer-events: none;
+  }
+  .artisan-signature {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+  .gold-leaf-border {
+    border-image: linear-gradient(to right, #2D2B2A, #F38020, #2D2B2A) 1;
+  }
 }
 @keyframes sketchy-shake {
   0% { transform: rotate(0deg); }
-  25% { transform: rotate(1deg) translate(1px, 1px); }
-  50% { transform: rotate(-1deg) translate(-1px, -1px); }
-  75% { transform: rotate(0.5deg) translate(1px, -1px); }
+  25% { transform: rotate(0.5deg) translate(0.5px, 0.5px); }
+  50% { transform: rotate(-0.5deg) translate(-0.5px, -0.5px); }
+  75% { transform: rotate(0.25deg) translate(0.5px, -0.5px); }
   100% { transform: rotate(0deg); }
 }
 @keyframes draw {

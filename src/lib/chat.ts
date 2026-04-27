@@ -1,7 +1,7 @@
-import type { Message, ChatState, ToolCall, WeatherResult, MCPResult, ErrorResult, SessionInfo } from '../../worker/types';
-export interface ChatResponse {
+import type { Message, ChatState, ToolCall, SessionInfo } from '../../worker/types';
+export interface ChatResponse<T = ChatState> {
   success: boolean;
-  data?: ChatState;
+  data?: T;
   error?: string;
 }
 export const MODELS = [
@@ -11,11 +11,16 @@ export const MODELS = [
 class ChatService {
   private sessionId: string;
   private baseUrl: string;
-  constructor() {
-    const savedSession = localStorage.getItem('fableforge_last_session');
-    this.sessionId = savedSession || crypto.randomUUID();
+  constructor(sessionId?: string) {
+    const savedSession = sessionId || localStorage.getItem('fableforge_last_session') || crypto.randomUUID();
+    this.sessionId = savedSession;
     this.baseUrl = `/api/chat/${this.sessionId}`;
-    if (!savedSession) localStorage.setItem('fableforge_last_session', this.sessionId);
+    localStorage.setItem('fableforge_last_session', this.sessionId);
+  }
+  setSession(sessionId: string) {
+    this.sessionId = sessionId;
+    this.baseUrl = `/api/chat/${this.sessionId}`;
+    localStorage.setItem('fableforge_last_session', this.sessionId);
   }
   async sendMessage(
     message: string,
@@ -67,19 +72,44 @@ class ChatService {
       return { success: false, error: 'Failed to clear' };
     }
   }
+  // Session Management via AppController
+  async listSessions(): Promise<ChatResponse<SessionInfo[]>> {
+    try {
+      const response = await fetch('/api/sessions');
+      return await response.json();
+    } catch (error) {
+      return { success: false, error: 'Failed to list sessions' };
+    }
+  }
+  async createSession(title?: string, firstMessage?: string): Promise<ChatResponse<SessionInfo>> {
+    try {
+      const response = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, firstMessage }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        this.setSession(result.data.sessionId);
+      }
+      return result;
+    } catch (error) {
+      return { success: false, error: 'Failed to create session' };
+    }
+  }
+  async deleteSession(sessionId: string): Promise<ChatResponse<{ deleted: boolean }>> {
+    try {
+      const response = await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
+      return await response.json();
+    } catch (error) {
+      return { success: false, error: 'Failed to delete session' };
+    }
+  }
   getSessionId(): string {
     return this.sessionId;
   }
-  newSession(): void {
-    this.sessionId = crypto.randomUUID();
-    localStorage.setItem('fableforge_last_session', this.sessionId);
-    this.baseUrl = `/api/chat/${this.sessionId}`;
-  }
 }
 export const chatService = new ChatService();
-/**
- * Extracts the image_url from a generate_illustration tool call result
- */
 export const parseToolResult = (toolCall?: ToolCall): string | null => {
   if (!toolCall || toolCall.name !== 'generate_illustration') return null;
   const result = toolCall.result as any;
