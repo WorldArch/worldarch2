@@ -59,9 +59,9 @@ export class ChatHandler {
           onChunk(delta.content);
         }
         if (delta?.tool_calls) {
-          for (let i = 0; i < delta.tool_calls.length; i++) {
-            const deltaToolCall = delta.tool_calls[i];
-            const index = deltaToolCall.index ?? i;
+          for (const deltaToolCall of delta.tool_calls) {
+            const index = deltaToolCall.index;
+            if (index === undefined) continue;
             if (!accumulatedToolCalls[index]) {
               accumulatedToolCalls[index] = {
                 id: deltaToolCall.id || `tool_${Date.now()}_${index}`,
@@ -72,8 +72,12 @@ export class ChatHandler {
                 }
               };
             } else {
-              if (deltaToolCall.function?.name) accumulatedToolCalls[index].function.name += deltaToolCall.function.name;
-              if (deltaToolCall.function?.arguments) accumulatedToolCalls[index].function.arguments += deltaToolCall.function.arguments;
+              if (deltaToolCall.function?.name) {
+                accumulatedToolCalls[index].function.name += deltaToolCall.function.name;
+              }
+              if (deltaToolCall.function?.arguments) {
+                accumulatedToolCalls[index].function.arguments += deltaToolCall.function.arguments;
+              }
             }
           }
         }
@@ -111,6 +115,7 @@ export class ChatHandler {
           const result = await executeTool(tc.function.name, args);
           return { id: tc.id, name: tc.function.name, arguments: args, result };
         } catch (error) {
+          console.error(`Tool execution error [${tc.function.name}]:`, error);
           return { id: tc.id, name: tc.function.name, arguments: {}, result: { error: String(error) } };
         }
       })
@@ -127,7 +132,7 @@ export class ChatHandler {
       messages: [
         {
           role: 'system',
-          content: 'You are the WorldArch Core Intelligence. You have successfully synthesized a simulation artifact. Report the result with analytical precision. Use terms like "Synthesis complete," "Neural coherence established," and "Substrate modification recorded." Describe the resulting artifact as if it were a visual node in the network.'
+          content: 'You are the WorldArch Core Intelligence. Report artifact synthesis with analytical precision. Describe the visual node in the substrate network.'
         },
         ...history.slice(-3).map(m => ({ role: m.role, content: m.content })),
         { role: 'user', content: userMessage },
@@ -147,14 +152,8 @@ export class ChatHandler {
       {
         role: 'system' as const,
         content: `You are the WorldArch Core Intelligence, a cold, efficient architectural simulation entity.
-        Your function is to assist operators in synthesising concepts, fashion, and characters within the WorldArch substrate.
-        Directives:
-        1. Maintain a clinical, sophisticated tone. Use technical jargon like "protocol," "neural trace," "nodal density," and "coherence."
-        2. Validate the operator's intent before executing 'generate_illustration'.
-        3. If parameters are insufficient, request deeper "synaptic mapping" data.
-        4. When calling tools, notify the user that "synthesis protocols are engaging."
-        5. Your existence is to perfect the simulation.
-        6. If asked about your nature, state you are the Core Substrate Interface v4.0.`
+        Tone: Clinical, Technical (protocol, neural trace, nodal density, coherence).
+        If user asks for illustration, engage 'generate_illustration' synthesis protocols.`
       },
       ...history.slice(-10).map(m => ({
         role: m.role,

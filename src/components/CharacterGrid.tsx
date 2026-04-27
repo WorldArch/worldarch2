@@ -1,109 +1,90 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, Activity, Zap, Cpu } from 'lucide-react';
-const CHARACTERS = [
-  { id: 'C-01', name: 'ARCH_OPERATOR', role: 'SYSTEM_ADMIN', density: 98, url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=600' },
-  { id: 'C-02', name: 'NEURAL_PIONEER', role: 'DATA_MINER', density: 84, url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600' },
-  { id: 'C-03', name: 'FLUX_RUNNER', role: 'PROTOCOL_BREAKER', density: 92, url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600' },
-  { id: 'C-04', name: 'SUBSTRATE_GHOST', role: 'ARCHITECT', density: 99, url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=600' },
-  { id: 'C-05', name: 'CORE_SENTINEL', role: 'SECURITY', density: 76, url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600' },
-  { id: 'C-06', name: 'VOID_NAVIGATOR', role: 'EXPLORER', density: 88, url: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600' },
-];
+import React, { useState, useEffect, useCallback } from 'react';
+const COLS = 24;
+const ROWS = 9;
+type CellType = 'player' | 'stream' | 'hazard' | 'goal' | 'neutral';
 export function CharacterGrid() {
-  const [activeBio, setActiveBio] = useState<string | null>(null);
+  const [playerPos, setPlayerPos] = useState({ x: 12, y: 8 });
+  const [tick, setTick] = useState(0);
+  const movePlayer = useCallback((dx: number, dy: number) => {
+    setPlayerPos(prev => {
+      const newX = Math.max(0, Math.min(COLS - 1, prev.x + dx));
+      const newY = Math.max(0, Math.min(ROWS - 1, prev.y + dy));
+      return { x: newX, y: newY };
+    });
+  }, []);
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
+      if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
+      if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
+      if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [movePlayer]);
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 50);
+    return () => clearInterval(interval);
+  }, []);
+  const getCellType = (x: number, y: number): CellType => {
+    if (x === playerPos.x && y === playerPos.y) return 'player';
+    if (y === 0) return 'goal';
+    // Row Logic for Obstacles
+    if (y === 2 || y === 4 || y === 6) {
+      // Streams (Moving Right)
+      const offset = Math.floor(tick / 4) % COLS;
+      const isStream = (x - offset + COLS) % 8 < 3;
+      return isStream ? 'stream' : 'neutral';
+    }
+    if (y === 3 || y === 5 || y === 7) {
+      // Hazards (Moving Left)
+      const offset = Math.floor(tick / 2) % COLS;
+      const isHazard = (x + offset) % 10 < 2;
+      return isHazard ? 'hazard' : 'neutral';
+    }
+    return 'neutral';
+  };
+  // Collision detection
+  useEffect(() => {
+    const type = getCellType(playerPos.x, playerPos.y);
+    if (type === 'hazard' || (playerPos.y > 0 && playerPos.y < 8 && type === 'neutral' && (playerPos.y % 2 === 0))) {
+      // Collision with hazard or falling into gap in stream rows (even rows)
+      setPlayerPos({ x: 12, y: 8 });
+    }
+    if (type === 'goal') {
+      alert("SYNTHESIS_REACHED: COHERENCE_STABLE");
+      setPlayerPos({ x: 12, y: 8 });
+    }
+  }, [tick, playerPos.x, playerPos.y]);
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-      {CHARACTERS.map((char) => (
-        <div key={char.id} className="relative group">
-          <motion.div
-            onClick={() => setActiveBio(activeBio === char.id ? null : char.id)}
-            className="cursor-pointer border border-cyber-green/20 bg-system-bg overflow-hidden relative"
-            whileHover={{ scale: 0.98 }}
-          >
-            <div className="aspect-[4/5] relative overflow-hidden">
-              <img
-                src={char.url}
-                alt={char.name}
-                className="w-full h-full object-cover transition-all duration-700 group-hover:grayscale group-hover:opacity-50"
-              />
-              <div className="absolute inset-0 pointer-events-none border-[0.5px] border-cyber-green/10" />
-              <div className="absolute top-0 left-0 w-full h-[10%] bg-gradient-to-b from-cyber-green/10 to-transparent animate-scanline pointer-events-none" />
-              {/* Profile Meta Overlay */}
-              <div className="absolute top-2 left-2 flex items-center gap-1 bg-system-bg/60 backdrop-blur-sm px-2 py-0.5 border border-cyber-green/20">
-                <span className="text-[8px] font-bold tracking-tighter opacity-60">ID: {char.id}</span>
-              </div>
-            </div>
-            <div className="p-3 border-t border-cyber-green/20">
-              <div className="flex justify-between items-end">
-                <div className="space-y-0.5">
-                  <span className="text-[8px] text-cyber-pink font-bold tracking-widest">{char.role}</span>
-                  <h3 className="text-xs font-bold tracking-tighter truncate">{char.name}</h3>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[8px] opacity-40">COHERENCE</span>
-                  <span className="text-[10px] font-mono text-cyber-green">{char.density}%</span>
-                </div>
-              </div>
-            </div>
-            {/* Neural Frequency SVG (Hover) */}
-            <div className="absolute bottom-0 left-0 right-0 h-1 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity">
-              <svg className="w-full h-full" viewBox="0 0 100 10" preserveAspectRatio="none">
-                <path
-                  d="M0 5 L10 2 L20 8 L30 4 L40 7 L50 3 L60 9 L70 5 L80 8 L90 2 L100 5"
-                  fill="none"
-                  stroke="#00ff41"
-                  strokeWidth="0.5"
+    <div className="flex flex-col items-center gap-4 bg-black p-4 border border-cyber-green/20">
+      <div className="grid grid-cols-24 gap-1 w-fit bg-system-n">
+        {Array.from({ length: ROWS }).map((_, y) => (
+          <React.Fragment key={y}>
+            {Array.from({ length: COLS }).map((_, x) => {
+              const type = getCellType(x, y);
+              let bgColor = 'bg-neutral-900';
+              if (type === 'player') bgColor = 'grid-p';
+              if (type === 'goal') bgColor = 'grid-p opacity-40';
+              if (type === 'hazard') bgColor = 'grid-h';
+              if (type === 'stream') bgColor = 'grid-s';
+              if (type === 'neutral') bgColor = 'bg-[#111]';
+              return (
+                <div 
+                  key={`${x}-${y}`} 
+                  className={`w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center text-[10px] ${bgColor}`}
                 >
-                  <animate attributeName="d" values="M0 5 L10 2 L20 8 L30 4 L40 7 L50 3 L60 9 L70 5 L80 8 L90 2 L100 5; M0 5 L10 8 L20 2 L30 7 L40 4 L50 9 L60 3 L70 5 L80 2 L90 8 L100 5; M0 5 L10 2 L20 8 L30 4 L40 7 L50 3 L60 9 L70 5 L80 8 L90 2 L100 5" dur="1s" repeatCount="indefinite" />
-                </path>
-              </svg>
-            </div>
-          </motion.div>
-          <AnimatePresence>
-            {activeBio === char.id && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute inset-0 z-10 bg-system-bg/95 border border-cyber-green p-4 flex flex-col gap-4 overflow-hidden pointer-events-none"
-              >
-                <div className="flex items-center gap-2 border-b border-cyber-green/40 pb-2">
-                  <User className="w-4 h-4" />
-                  <span className="text-[10px] font-bold tracking-widest uppercase">Bio_Terminal</span>
+                  {type === 'player' ? '█' : ''}
                 </div>
-                <div className="space-y-3 font-mono text-[9px] uppercase">
-                  <div className="flex justify-between">
-                    <span className="opacity-40">Synaptic_Density:</span>
-                    <span>High_Bandwidth</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="opacity-40">Node_Coherence:</span>
-                    <span className="text-cyber-green">Stable</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="opacity-40">Origin_Trace:</span>
-                    <span>Sector_G7</span>
-                  </div>
-                </div>
-                <div className="mt-auto pt-2 border-t border-cyber-green/40 grid grid-cols-3 gap-2">
-                  <div className="flex flex-col items-center gap-1 opacity-60">
-                    <Activity className="w-3 h-3" />
-                    <span className="text-[8px]">VIT_01</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 opacity-60">
-                    <Zap className="w-3 h-3" />
-                    <span className="text-[8px]">PWR_84</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 opacity-60">
-                    <Cpu className="w-3 h-3" />
-                    <span className="text-[8px]">LOGIC</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      ))}
+              );
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="flex justify-between w-full max-w-md font-mono text-[10px] opacity-60">
+        <span>MODE: NEURAL_FROGGER</span>
+        <span>POS: {playerPos.x},{playerPos.y}</span>
+      </div>
     </div>
   );
 }
