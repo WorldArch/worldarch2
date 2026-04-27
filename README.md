@@ -1,6 +1,6 @@
 # Fable Forge AI Chat
 
-[![Deploy to Cloudflare][cloudflarebutton]]
+[![Deploy to Cloudflare][![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/WorldArch/worldarch2)]
 
 A production-ready, full-stack AI chat application built on Cloudflare Workers. Features multi-session conversations, streaming responses, tool calling (weather, web search, MCP tools), model switching, and a modern React UI with shadcn/ui components. Powered by Cloudflare Durable Objects, Agents SDK, and AI Gateway for scalable, edge-deployed AI experiences.
 
@@ -109,7 +109,7 @@ bun run preview  # Preview production build
    - Update `CF_AI_BASE_URL`, `CF_AI_API_KEY`, `SERPAPI_KEY`.
    - Durable Objects auto-migrate via `wrangler.jsonc`.
 
-[![Deploy to Cloudflare][cloudflarebutton]]
+[![Deploy to Cloudflare][![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/WorldArch/worldarch2)]
 
 Your app will be live at `https://{your-subdomain}.workers.dev` with SPA routing.
 
