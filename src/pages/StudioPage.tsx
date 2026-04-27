@@ -1,50 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Image as ImageIcon, Sparkles, User, Palette, ArrowLeft } from 'lucide-react';
+import { Send, Sparkles, User, Palette, ArrowLeft, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  image?: string;
-}
+import { chatService, parseToolResult } from '@/lib/chat';
+import { IllustrationEasel } from '@/components/IllustrationEasel';
+import confetti from 'canvas-confetti';
+import { toast } from 'sonner';
+import type { Message, ChatState } from '../../worker/types';
 export function StudioPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Welcome to the Forge, Storyteller. I am your Art Director. What whimsical scene shall we bring to life today?",
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [currentImage, setCurrentImage] = useState<string | null>(null);
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
+  const [currentArtwork, setCurrentArtwork] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const sessionId = chatService.getSessionId();
+  useEffect(() => {
+    loadMessages();
+  }, [sessionId]);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, streamingText]);
+  const loadMessages = async () => {
+    const res = await chatService.getMessages();
+    if (res.success && res.data) {
+      setMessages(res.data.messages);
+      // Look for latest artwork
+      const lastToolMsg = [...res.data.messages].reverse().find(m => m.toolCalls?.some(tc => tc.name === 'generate_illustration'));
+      if (lastToolMsg) {
+        const toolCall = lastToolMsg.toolCalls?.find(tc => tc.name === 'generate_illustration');
+        const url = parseToolResult(toolCall);
+        if (url) setCurrentArtwork(url);
+      }
+    }
+  };
+  const handleSend = async () => {
+    if (!input.trim() || isProcessing) return;
+    const userMessage = input.trim();
     setInput('');
-    setIsGenerating(true);
-    // Mock response
-    setTimeout(() => {
-      const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Marvelous choice! I've sketched a "storybook style" rendition of your request. How does it look?`,
-      };
-      setMessages(prev => [...prev, assistantMsg]);
-      setCurrentImage('https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=1200');
-      setIsGenerating(false);
-    }, 2000);
+    setIsProcessing(true);
+    setStreamingText('');
+    // Optimistic UI update
+    const tempUserMsg: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: userMessage,
+      timestamp: Date.now()
+    };
+    setMessages(prev => [...prev, tempUserMsg]);
+    try {
+      await chatService.sendMessage(userMessage, undefined, (chunk) => {
+        setStreamingText(prev => prev + chunk);
+      });
+      // Refresh to get final state with tool results
+      const res = await chatService.getMessages();
+      if (res.success && res.data) {
+        setMessages(res.data.messages);
+        setStreamingText('');
+        // Detect if a tool was just called
+        const lastMsg = res.data.messages[res.data.messages.length - 1];
+        const toolCall = lastMsg.toolCalls?.find(tc => tc.name === 'generate_illustration');
+        if (toolCall) {
+          const url = parseToolResult(toolCall);
+          if (url) {
+            setCurrentArtwork(url);
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+              colors: ['#F38020', '#FDFBF7', '#2D2B2A']
+            });
+          }
+        }
+      }
+    } catch (err) {
+      toast.error("The pigments have dried up. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  const handleClear = async () => {
+    if (confirm("Clear this canvas and start anew?")) {
+      await chatService.clearMessages();
+      setMessages([]);
+      setCurrentArtwork(null);
+      toast.success("Fresh parchment ready!");
+    }
   };
   return (
-    <div className="h-screen bg-[#FDFBF7] flex flex-col">
-      {/* Studio Header */}
-      <header className="h-16 border-b-2 border-[#2D2B2A] bg-white px-6 flex items-center justify-between shadow-sm">
+    <div className="h-screen bg-[#FDFBF7] flex flex-col overflow-hidden">
+      <header className="h-16 border-b-2 border-[#2D2B2A] bg-white px-6 flex items-center justify-between shrink-0 z-10 shadow-sm">
         <div className="flex items-center gap-4">
           <Link to="/" className="p-2 hover:bg-muted rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
@@ -54,57 +105,72 @@ export function StudioPage() {
             <h1 className="text-2xl font-display">Illustration Studio</h1>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Badge variant="outline" className="border-[#2D2B2A] font-serif italic px-3 py-1">
+        <div className="flex items-center gap-2 md:gap-4">
+          <Button variant="ghost" size="icon" onClick={handleClear} className="text-muted-foreground hover:text-destructive">
+            <Trash2 className="w-5 h-5" />
+          </Button>
+          <Badge variant="outline" className="hidden sm:inline-flex border-[#2D2B2A] font-serif italic px-3 py-1">
             Art Director Active
           </Badge>
         </div>
       </header>
-      {/* Main Content Pane */}
-      <main className="flex-1 flex overflow-hidden">
-        {/* Left: Chat Side (Art Director) */}
-        <section className="w-full md:w-[400px] border-r-2 border-[#2D2B2A] flex flex-col bg-white/50 backdrop-blur-sm">
+      <main className="flex-1 flex flex-col md:flex-row overflow-hidden max-w-7xl mx-auto w-full px-0 sm:px-4 lg:px-8 py-0 md:py-8 lg:py-10">
+        {/* Left Pane: Chat */}
+        <section className="w-full md:w-[400px] flex flex-col bg-white/50 backdrop-blur-sm md:rounded-l-3xl md:border-2 md:border-r-0 border-[#2D2B2A] overflow-hidden">
           <ScrollArea className="flex-1 p-4">
             <div className="space-y-6">
               {messages.map((msg) => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                 >
                   <div className={`w-8 h-8 rounded-full border-2 border-[#2D2B2A] flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-[#F38020]' : 'bg-white'}`}>
                     {msg.role === 'user' ? <User className="w-4 h-4 text-white" /> : <Sparkles className="w-4 h-4 text-[#F38020]" />}
                   </div>
-                  <div className={`p-4 sketchy-box ${msg.role === 'user' ? 'bg-muted' : 'bg-white'}`}>
-                    <p className="text-sm font-serif leading-relaxed">{msg.content}</p>
+                  <div className={`p-4 sketchy-box max-w-[85%] ${msg.role === 'user' ? 'bg-muted' : 'bg-white'}`}>
+                    <p className="text-sm font-serif leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                   </div>
                 </motion.div>
               ))}
-              {isGenerating && (
+              {streamingText && (
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#2D2B2A] bg-white flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4 text-[#F38020]" />
+                  </div>
+                  <div className="p-4 sketchy-box bg-white max-w-[85%]">
+                    <p className="text-sm font-serif leading-relaxed whitespace-pre-wrap">{streamingText}</p>
+                  </div>
+                </div>
+              )}
+              {isProcessing && !streamingText && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-[#2D2B2A] bg-white flex items-center justify-center animate-bounce">
                     <Palette className="w-4 h-4 text-[#F38020]" />
                   </div>
-                  <div className="p-4 sketchy-box bg-white italic font-serif">
+                  <div className="p-4 sketchy-box bg-white italic font-serif text-sm">
                     Mixing pigments...
                   </div>
                 </motion.div>
               )}
+              <div ref={scrollRef} />
             </div>
           </ScrollArea>
           <div className="p-4 border-t-2 border-[#2D2B2A] bg-white">
             <div className="relative">
               <Input
-                placeholder="Describe your storybook scene..."
+                placeholder="Describe a scene for the director..."
                 className="pr-12 h-14 font-serif text-lg border-2 border-[#2D2B2A] rounded-xl focus-visible:ring-[#F38020]"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                disabled={isProcessing}
               />
-              <Button 
+              <Button
                 onClick={handleSend}
-                size="icon" 
+                size="icon"
+                disabled={isProcessing || !input.trim()}
                 className="absolute right-2 top-2 h-10 w-10 bg-[#F38020] hover:bg-[#D14615] rounded-lg"
               >
                 <Send className="w-5 h-5" />
@@ -112,46 +178,9 @@ export function StudioPage() {
             </div>
           </div>
         </section>
-        {/* Right: The Easel (Canvas) */}
-        <section className="hidden md:flex flex-1 items-center justify-center p-8 bg-[#FDFBF7] relative">
-          <div className="absolute inset-0 opacity-5 pointer-events-none" 
-               style={{backgroundImage: 'radial-gradient(#2D2B2A 0.5px, transparent 0.5px)', backgroundSize: '16px 16px'}} />
-          <AnimatePresence mode="wait">
-            {currentImage ? (
-              <motion.div
-                key={currentImage}
-                initial={{ opacity: 0, scale: 0.95, rotate: -1 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="w-full max-w-2xl aspect-[4/5] md:aspect-square relative sketchy-box bg-white p-6"
-              >
-                <div className="w-full h-full border-2 border-[#2D2B2A]/20 overflow-hidden rounded-sm relative">
-                  <img 
-                    src={currentImage} 
-                    alt="Latest Illustration" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-[#F38020] text-white border-none font-bold uppercase">Original Work</Badge>
-                  </div>
-                </div>
-                <div className="absolute -bottom-10 left-0 right-0 text-center font-display text-muted-foreground italic">
-                  &ldquo;Refined in the Forge of Imagination&rdquo;
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
-                className="text-center space-y-4"
-              >
-                <div className="w-32 h-32 mx-auto sketchy-box flex items-center justify-center bg-white opacity-40">
-                  <ImageIcon className="w-12 h-12 text-muted-foreground" />
-                </div>
-                <p className="font-display text-2xl text-muted-foreground italic">Your blank parchment awaits...</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Right Pane: Easel */}
+        <section className="flex-1 bg-[#FDFBF7] md:rounded-r-3xl md:border-2 border-[#2D2B2A] overflow-hidden">
+          <IllustrationEasel imageUrl={currentArtwork} isGenerating={isProcessing} />
         </section>
       </main>
     </div>
