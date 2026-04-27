@@ -81,7 +81,7 @@ function runSetupCommands() {
     "bun add canvas-confetti@^1.9.3",
     "bun add react-masonry-css@^1.0.16",
     "bun add canvas-confetti",
-    "bun add lucide-react framer-motion clsx tailwind-merge react-use"
+    "bun add lucide-react framer-motion clsx tailwind-merge"
 ];
     
     if (commands.length === 0) {
