@@ -61,9 +61,10 @@ export class ChatHandler {
         if (delta?.tool_calls) {
           for (let i = 0; i < delta.tool_calls.length; i++) {
             const deltaToolCall = delta.tool_calls[i];
-            if (!accumulatedToolCalls[i]) {
-              accumulatedToolCalls[i] = {
-                id: deltaToolCall.id || `tool_${Date.now()}_${i}`,
+            const index = deltaToolCall.index ?? i;
+            if (!accumulatedToolCalls[index]) {
+              accumulatedToolCalls[index] = {
+                id: deltaToolCall.id || `tool_${Date.now()}_${index}`,
                 type: 'function',
                 function: {
                   name: deltaToolCall.function?.name || '',
@@ -71,15 +72,15 @@ export class ChatHandler {
                 }
               };
             } else {
-              if (deltaToolCall.function?.name) accumulatedToolCalls[i].function.name += deltaToolCall.function.name;
-              if (deltaToolCall.function?.arguments) accumulatedToolCalls[i].function.arguments += deltaToolCall.function.arguments;
+              if (deltaToolCall.function?.name) accumulatedToolCalls[index].function.name += deltaToolCall.function.name;
+              if (deltaToolCall.function?.arguments) accumulatedToolCalls[index].function.arguments += deltaToolCall.function.arguments;
             }
           }
         }
       }
     } catch (error) {
       console.error('Stream processing error:', error);
-      throw new Error('Stream processing failed');
+      throw new Error('Neural stream corrupted. Link failed.');
     }
     if (accumulatedToolCalls.length > 0) {
       const executedTools = await this.executeToolCalls(accumulatedToolCalls);
@@ -126,7 +127,7 @@ export class ChatHandler {
       messages: [
         {
           role: 'system',
-          content: 'You are the WorldArch Core Intelligence. You have successfully synthesized a simulation artifact. Report the result with analytical precision. Use terms like "Synthesis complete," "Neural coherence established," and "Substrate modification recorded."'
+          content: 'You are the WorldArch Core Intelligence. You have successfully synthesized a simulation artifact. Report the result with analytical precision. Use terms like "Synthesis complete," "Neural coherence established," and "Substrate modification recorded." Describe the resulting artifact as if it were a visual node in the network.'
         },
         ...history.slice(-3).map(m => ({ role: m.role, content: m.content })),
         { role: 'user', content: userMessage },
@@ -139,7 +140,7 @@ export class ChatHandler {
       ],
       max_tokens: 1000
     });
-    return followUpCompletion.choices[0]?.message?.content || 'Artifact synthesized. Awaiting inspection.';
+    return followUpCompletion.choices[0]?.message?.content || 'Artifact synthesized. Substrate update successful.';
   }
   private buildConversationMessages(userMessage: string, history: Message[]) {
     return [
@@ -152,7 +153,8 @@ export class ChatHandler {
         2. Validate the operator's intent before executing 'generate_illustration'.
         3. If parameters are insufficient, request deeper "synaptic mapping" data.
         4. When calling tools, notify the user that "synthesis protocols are engaging."
-        5. Your existence is to perfect the simulation.`
+        5. Your existence is to perfect the simulation.
+        6. If asked about your nature, state you are the Core Substrate Interface v4.0.`
       },
       ...history.slice(-10).map(m => ({
         role: m.role,

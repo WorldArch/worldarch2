@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ZoomIn, Info } from 'lucide-react';
+import { X, ZoomIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 const DESIGNS = [
   { id: '1', title: 'ARCHITECTURE_MASTER', url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1200', tag: 'STRUCTURAL' },
@@ -17,8 +17,16 @@ export function DesignGrid() {
       if (e.key === 'Escape') setSelectedId(null);
     };
     window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, []);
+    if (selectedId) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'auto';
+    };
+  }, [selectedId]);
   return (
     <div className="relative">
       <div className={cn(
@@ -32,10 +40,10 @@ export function DesignGrid() {
             onClick={() => setSelectedId(item.id)}
             className="group relative aspect-square border border-cyber-green/20 overflow-hidden cursor-pointer bg-cyber-green/5"
           >
-            <img 
-              src={item.url} 
-              alt={item.title} 
-              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-110" 
+            <img
+              src={item.url}
+              alt={item.title}
+              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-system-bg to-transparent opacity-60" />
             <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
@@ -43,7 +51,7 @@ export function DesignGrid() {
                 <span className="text-[8px] tracking-[0.3em] opacity-40">{item.tag}</span>
                 <h3 className="text-xs font-bold tracking-widest">{item.title}</h3>
               </div>
-              <ZoomIn className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ZoomIn className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-cyber-green shadow-[0_0_10px_rgba(0,255,65,0.5)]" />
             </div>
             <div className="absolute top-0 left-0 w-full h-[1px] bg-cyber-green/40 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
           </motion.div>
@@ -56,31 +64,32 @@ export function DesignGrid() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-system-bg/60 backdrop-blur-md z-[4999]"
+              className="fixed inset-0 bg-system-bg/80 backdrop-blur-xl z-[9998]"
               onClick={() => setSelectedId(null)}
             />
             <motion.div
               layoutId={`card-${selectedId}`}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vh] z-[5000] border-2 border-cyber-green bg-system-bg overflow-hidden shadow-[0_0_50px_rgba(0,255,65,0.3)]"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[85vh] md:w-[80vw] md:h-[80vh] z-[9999] border-2 border-cyber-green bg-system-bg overflow-hidden shadow-[0_0_100px_rgba(0,255,65,0.2)]"
             >
-              <img 
-                src={DESIGNS.find(d => d.id === selectedId)?.url} 
-                alt="Selected" 
-                className="w-full h-full object-cover scale-110"
+              <img
+                src={DESIGNS.find(d => d.id === selectedId)?.url}
+                alt="Selected Artifact"
+                className="w-full h-full object-cover scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-system-bg via-transparent to-transparent opacity-60" />
               <div className="absolute bottom-10 left-10 space-y-2">
-                <span className="px-2 py-1 bg-cyber-green text-system-bg text-[10px] font-bold tracking-[0.5em]">ACTIVE_FOCUS</span>
-                <h2 className="text-4xl font-bold tracking-tighter">
+                <span className="px-3 py-1 bg-cyber-green text-system-bg text-[10px] font-bold tracking-[0.5em] uppercase">Focus_Engaged</span>
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter hud-text">
                   {DESIGNS.find(d => d.id === selectedId)?.title}
                 </h2>
               </div>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); setSelectedId(null); }}
-                className="absolute top-6 right-6 p-2 bg-cyber-green text-system-bg hover:scale-110 transition-transform"
+                className="absolute top-6 right-6 p-2 bg-cyber-green text-system-bg hover:bg-cyber-pink hover:text-white hover:scale-110 transition-all shadow-[0_0_15px_rgba(0,255,65,0.3)]"
               >
                 <X className="w-6 h-6" />
               </button>
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-cyber-green animate-scanline pointer-events-none opacity-40" />
             </motion.div>
           </>
         )}

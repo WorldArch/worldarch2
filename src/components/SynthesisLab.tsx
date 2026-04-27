@@ -13,21 +13,17 @@ export function SynthesisLab() {
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const loadHistory = async () => {
-      try {
-        const res = await chatService.getMessages();
-        if (res.success && res.data?.messages) {
-          setMessages(res.data.messages);
-          const images = res.data.messages
-            .filter(m => m.role === 'assistant' && m.toolCalls)
-            .flatMap(m => m.toolCalls || [])
-            .map(tc => parseToolResult(tc))
-            .filter(Boolean) as string[];
-          if (images.length > 0) {
-            setActiveArtifact(images[images.length - 1]);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load neural history:", err);
+      const res = await chatService.getMessages();
+      if (res.success && res.data) {
+        setMessages(res.data.messages);
+        // Find last generated image
+        const lastImage = res.data.messages
+          .filter(m => m.role === 'assistant' && m.toolCalls)
+          .flatMap(m => m.toolCalls || [])
+          .map(tc => parseToolResult(tc))
+          .filter(Boolean)
+          .pop();
+        if (lastImage) setActiveArtifact(lastImage);
       }
     };
     loadHistory();
@@ -47,31 +43,24 @@ export function SynthesisLab() {
     setInput('');
     setIsProcessing(true);
     setStreamingText('');
-    try {
-      const res = await chatService.sendMessage(userMsg.content, undefined, (chunk) => {
-        setStreamingText(prev => prev + chunk);
-      });
-      if (res.success) {
-        const finalState = await chatService.getMessages();
-        if (finalState.success && finalState.data?.messages) {
-          const newMessages = finalState.data.messages;
-          setMessages(newMessages);
-          const lastMsg = newMessages[newMessages.length - 1];
-          if (lastMsg?.toolCalls?.[0]) {
-            const imageUrl = parseToolResult(lastMsg.toolCalls[0]);
-            if (imageUrl) setActiveArtifact(imageUrl);
-          }
-        }
+    const res = await chatService.sendMessage(userMsg.content, undefined, (chunk) => {
+      setStreamingText(prev => prev + chunk);
+    });
+    if (res.success) {
+      const finalState = await chatService.getMessages();
+      if (finalState.success && finalState.data) {
+        setMessages(finalState.data.messages);
+        const lastToolResult = finalState.data.messages[finalState.data.messages.length - 1].toolCalls?.[0];
+        const imageUrl = parseToolResult(lastToolResult);
+        if (imageUrl) setActiveArtifact(imageUrl);
       }
-    } catch (error) {
-      console.error("Link disruption in neural trace:", error);
-    } finally {
-      setStreamingText('');
-      setIsProcessing(false);
     }
+    setStreamingText('');
+    setIsProcessing(false);
   };
   return (
     <div className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-220px)] min-h-[600px]">
+      {/* Left Pane: Neural Traces (Chat) */}
       <div className="flex-1 flex flex-col border border-cyber-green/20 bg-system-bg/40 backdrop-blur-sm relative overflow-hidden">
         <div className="p-4 border-b border-cyber-green/20 flex items-center justify-between bg-cyber-green/5">
           <div className="flex items-center gap-2">
@@ -96,14 +85,12 @@ export function SynthesisLab() {
             >
               <div className="flex items-center gap-2 mb-1 opacity-40">
                 <span className="text-[9px] font-mono">{formatTime(msg.timestamp)}</span>
-                <span className="text-[9px] font-bold tracking-widest uppercase">
-                  {msg.role === 'user' ? 'OPERATOR' : 'CORE_INTEL'}
-                </span>
+                <span className="text-[9px] font-bold tracking-widest">{msg.role === 'user' ? 'OPERATOR' : 'CORE_INTEL'}</span>
               </div>
               <div className={cn(
                 "p-3 text-sm leading-relaxed border",
-                msg.role === 'user'
-                  ? "bg-cyber-green/10 border-cyber-green/30 text-cyber-green"
+                msg.role === 'user' 
+                  ? "bg-cyber-green/10 border-cyber-green/30 text-cyber-green" 
                   : "bg-system-bg border-cyber-green/20 text-cyber-green/90"
               )}>
                 {msg.content}
@@ -119,7 +106,7 @@ export function SynthesisLab() {
           {streamingText && (
             <div className="flex flex-col items-start mr-auto max-w-[85%]">
               <div className="flex items-center gap-2 mb-1 opacity-40">
-                <span className="text-[9px] font-bold tracking-widest uppercase text-cyber-green animate-pulse">STREAMING...</span>
+                <span className="text-[9px] font-bold tracking-widest uppercase text-cyber-green">Streaming...</span>
               </div>
               <div className="p-3 text-sm border bg-system-bg border-cyber-green/40 text-cyber-green/90">
                 {streamingText}
@@ -147,21 +134,23 @@ export function SynthesisLab() {
               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
+          {/* Mandatory AI Disclaimer */}
           <div className="flex items-start gap-2 opacity-40">
             <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
             <p className="text-[9px] leading-tight uppercase tracking-tighter">
-              Shared AI limits may apply to neural link bandwidth.
+              Note: System operates with shared AI resources; request volume may be subject to global substrate limits.
             </p>
           </div>
         </div>
       </div>
+      {/* Right Pane: Substrate Viewer (Artifact) */}
       <div className="lg:w-[45%] flex flex-col border border-cyber-green/20 bg-system-bg/40 backdrop-blur-sm relative">
         <div className="p-4 border-b border-cyber-green/20 flex items-center justify-between bg-cyber-pink/5">
           <div className="flex items-center gap-2">
             <ImageIcon className="w-4 h-4 text-cyber-pink" />
-            <span className="text-xs font-bold tracking-[0.2em] text-cyber-pink uppercase">Substrate_Viewer</span>
+            <span className="text-xs font-bold tracking-[0.2em] text-cyber-pink">SUBSTRATE_VIEWER</span>
           </div>
-          <span className="text-[10px] opacity-40 uppercase">Synth_Node_4</span>
+          <span className="text-[10px] opacity-40 uppercase">Sector_Synth_04</span>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
           <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -178,15 +167,13 @@ export function SynthesisLab() {
                 className="relative group w-full aspect-[4/5] max-w-sm border border-cyber-green/40 shadow-[0_0_30px_rgba(0,255,65,0.1)]"
               >
                 <img src={activeArtifact} alt="Synthesized Artifact" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-cyber-green/40 animate-scanline" />
+                <div className="absolute inset-0 bg-gradient-to-t from-system-bg via-transparent to-transparent opacity-60" />
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-cyber-green animate-scanline" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="flex justify-between items-end">
                     <div className="space-y-0.5">
                       <span className="text-[8px] text-cyber-pink font-bold">COHERENCE_STABLE</span>
-                      <div className="text-[10px] font-mono text-cyber-green/80 uppercase">
-                        Ref_{activeArtifact.slice(-10)}
-                      </div>
+                      <div className="text-[10px] font-mono text-cyber-green/80">HASH_REF: {activeArtifact.split('photo-')[1]?.slice(0, 10).toUpperCase() || 'UNKNWN'}</div>
                     </div>
                   </div>
                 </div>
@@ -202,17 +189,27 @@ export function SynthesisLab() {
           </AnimatePresence>
           {isProcessing && !activeArtifact && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-system-bg/60 backdrop-blur-sm">
-              <div className="w-10 h-10 border-2 border-cyber-green border-t-transparent rounded-full animate-spin mb-4" />
-              <span className="text-[10px] font-bold animate-pulse tracking-[0.4em] uppercase">Forging_Artifact</span>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="w-12 h-12 border-2 border-cyber-green border-t-transparent rounded-full mb-4"
+              />
+              <span className="text-xs font-bold animate-pulse tracking-widest">FORGING_ARTIFACT...</span>
             </div>
           )}
         </div>
-        <div className="p-3 border-t border-cyber-green/20 flex justify-between items-center opacity-30">
+        <div className="p-3 border-t border-cyber-green/20 flex justify-between items-center opacity-40">
           <div className="flex items-center gap-4">
-            <span className="text-[8px] font-mono">NODE: 0x442</span>
-            <span className="text-[8px] font-mono">LAYER: L2_SYNTH</span>
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-1 bg-cyber-green" />
+              <span className="text-[8px] font-mono">X: 104.2</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-1 bg-cyber-green" />
+              <span className="text-[8px] font-mono">Y: 29.8</span>
+            </div>
           </div>
-          <span className="text-[8px] font-mono">BETA_V.0.9</span>
+          <span className="text-[8px] font-mono">RENDER_VER: 0.9.2-BETA</span>
         </div>
       </div>
     </div>
