@@ -1,138 +1,106 @@
-// Home page of the app.
-// Currently a demo placeholder "please wait" screen.
-// Replace this file with your actual app UI. Do not delete it to use some other file as homepage. Simply replace the entire contents of this file.
-
-import { useEffect, useMemo, useState } from 'react'
-import { Sparkles } from 'lucide-react'
-
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { HAS_TEMPLATE_DEMO, TemplateDemo } from '@/components/TemplateDemo'
-import { Button } from '@/components/ui/button'
-import { Toaster, toast } from '@/components/ui/sonner'
-
-function formatDuration(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000))
-  const m = Math.floor(total / 60)
-  const s = total % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Paintbrush, Sparkles, BookOpen } from 'lucide-react';
+import Masonry from 'react-masonry-css';
+const MOCK_GALLERY = [
+  "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1490312278390-ab6414ef8bb9?auto=format&fit=crop&q=80&w=800",
+];
 export function HomePage() {
-  const [coins, setCoins] = useState(0)
-  const [isRunning, setIsRunning] = useState(false)
-  const [startedAt, setStartedAt] = useState<number | null>(null)
-  const [elapsedMs, setElapsedMs] = useState(0)
-
-  useEffect(() => {
-    if (!isRunning || startedAt === null) return
-
-    const t = setInterval(() => {
-      setElapsedMs(Date.now() - startedAt)
-    }, 250)
-
-    return () => clearInterval(t)
-  }, [isRunning, startedAt])
-
-  const formatted = useMemo(() => formatDuration(elapsedMs), [elapsedMs])
-
-  const onPleaseWait = () => {
-    setCoins((c) => c + 1)
-
-    if (!isRunning) {
-      // Resume from the current elapsed time
-      setStartedAt(Date.now() - elapsedMs)
-      setIsRunning(true)
-      toast.success('Building your app…', {
-        description: "Hang tight — we're setting everything up.",
-      })
-      return
-    }
-
-    setIsRunning(false)
-    toast.info('Still working…', {
-      description: 'You can come back in a moment.',
-    })
-  }
-
-  const onReset = () => {
-    setCoins(0)
-    setIsRunning(false)
-    setStartedAt(null)
-    setElapsedMs(0)
-    toast('Reset complete')
-  }
-
-  const onAddCoin = () => {
-    setCoins((c) => c + 1)
-    toast('Coin added')
-  }
-
+  const breakpointColumnsObj = {
+    default: 3,
+    1100: 2,
+    700: 1
+  };
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
-      <ThemeToggle />
-      <div className="absolute inset-0 bg-gradient-rainbow opacity-10 dark:opacity-20 pointer-events-none" />
-
-      <div className="text-center space-y-8 relative z-10 animate-fade-in w-full">
-        <div className="flex justify-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-primary floating">
-            <Sparkles className="w-8 h-8 text-white rotating" />
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
-            Creating your <span className="text-gradient">app</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto text-pretty">
-            Your application would be ready soon.
-          </p>
-        </div>
-
-        {HAS_TEMPLATE_DEMO ? (
-          <div className="max-w-5xl mx-auto text-left">
-            <TemplateDemo />
-          </div>
-        ) : (
-          <>
-            <div className="flex justify-center gap-4">
-              <Button
-                size="lg"
-                onClick={onPleaseWait}
-                className="btn-gradient px-8 py-4 text-lg font-semibold hover:-translate-y-0.5 transition-all duration-200"
-                aria-live="polite"
-              >
-                Please Wait
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <div>
-                Time elapsed:{' '}
-                <span className="font-medium tabular-nums text-foreground">{formatted}</span>
+    <div className="min-h-screen bg-[#FDFBF7] selection:bg-[#F38020]/30">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-12 md:py-20 lg:py-24 space-y-16">
+          {/* Hero Section */}
+          <header className="text-center space-y-6 max-w-3xl mx-auto">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-1 rounded-full border-2 border-[#2D2B2A] bg-white text-sm font-bold uppercase tracking-wider"
+            >
+              <Sparkles className="w-4 h-4 text-[#F38020]" />
+              Artisan AI Studio
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-6xl md:text-8xl font-display text-[#2D2B2A] leading-none"
+            >
+              Fable <span className="text-[#F38020]">Forge</span>
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl md:text-2xl text-muted-foreground italic font-serif"
+            >
+              Where every whisper of imagination becomes a hand-drawn wonder.
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="pt-4"
+            >
+              <Link to="/studio" className="btn-storybook text-xl">
+                Enter the Studio
+                <Paintbrush className="ml-2 w-6 h-6" />
+              </Link>
+            </motion.div>
+          </header>
+          {/* Gallery Section */}
+          <section className="space-y-8">
+            <div className="flex items-center justify-between border-b-2 border-[#2D2B2A] pb-4">
+              <h2 className="text-3xl font-display text-[#2D2B2A]">The Illustrator's Vault</h2>
+              <div className="flex items-center gap-2 text-sm font-bold font-serif uppercase tracking-widest text-muted-foreground">
+                <BookOpen className="w-4 h-4" />
+                Latest Generations
               </div>
-              <div>
-                Coins:{' '}
-                <span className="font-medium tabular-nums text-foreground">{coins}</span>
-              </div>
             </div>
-
-            <div className="flex justify-center gap-2">
-              <Button variant="outline" size="sm" onClick={onReset}>
-                Reset
-              </Button>
-              <Button variant="outline" size="sm" onClick={onAddCoin}>
-                Add Coin
-              </Button>
-            </div>
-          </>
-        )}
+            <Masonry
+              breakpointCols={breakpointColumnsObj}
+              className="flex -ml-6 w-auto"
+              columnClassName="pl-6 bg-clip-padding"
+            >
+              {MOCK_GALLERY.map((url, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  className="mb-6"
+                >
+                  <div className="sketchy-box overflow-hidden group">
+                    <img 
+                      src={url} 
+                      alt={`Illustration ${i}`} 
+                      className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                </motion.div>
+              ))}
+            </Masonry>
+          </section>
+          <footer className="text-center pt-12 border-t-2 border-[#2D2B2A]/10">
+            <p className="text-muted-foreground font-serif italic">
+              Note: FableForge uses high-whimsy AI algorithms. Request limits apply to preserve the magic.
+            </p>
+            <p className="text-xs mt-4 opacity-50">Powered by Cloudflare Agents & Imaginative Tools</p>
+          </footer>
+        </div>
       </div>
-
-      <footer className="absolute bottom-8 text-center text-muted-foreground/80">
-        <p>Powered by Cloudflare</p>
-      </footer>
-
-      <Toaster richColors closeButton />
     </div>
-  )
+  );
 }
