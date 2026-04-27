@@ -7,6 +7,7 @@ import { FashionGrid } from '@/components/FashionGrid';
 import { CharacterGrid } from '@/components/CharacterGrid';
 import { SynthesisLab } from '@/components/SynthesisLab';
 import { Activity, Database, Cpu, Terminal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 type Section = 'SYNTHESIS' | 'CONCEPTS' | 'FASHION' | 'CHARACTER' | 'SYSTEM';
 const LOG_EVENTS = [
   "CACHE_PURGE_SUCCESSFUL",
@@ -105,7 +106,7 @@ export function SystemPage() {
                             <motion.div
                               className="h-full bg-cyber-green shadow-[0_0_5px_#00ff41]"
                               initial={{ width: 0 }}
-                              animate={{ width: `${30 + Math.random() * 70}%` }}
+                              animate={{ width: '65%' }}
                               transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
                             />
                           </div>
