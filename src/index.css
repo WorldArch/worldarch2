@@ -2,85 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 @layer base {
-  :root {
-    --background: 40 30% 98%;
-    --foreground: 20 5% 15%;
-    --primary: 25 90% 54%;
-    --primary-foreground: 0 0% 100%;
-    --muted: 40 20% 94%;
-    --muted-foreground: 20 5% 40%;
-    --border: 20 10% 85%;
-    --radius: 0.75rem;
-  }
   body {
-    @apply bg-[#FDFBF7] text-[#2D2B2A] overflow-x-hidden;
-    font-family: 'Inter', sans-serif;
-  }
-  h1, h2, h3, h4 {
-    font-family: 'Fredericka the Great', cursive;
-    @apply tracking-tight;
-  }
-  p, span, div, input, button {
-    font-family: 'Playfair Display', serif;
+    @apply bg-system-bg text-cyber-green selection:bg-cyber-green/30;
+    font-family: 'IBM Plex Mono', monospace;
+    overflow-x: hidden;
   }
 }
 @layer components {
-  .sketchy-box {
-    border: 2px solid #2D2B2A;
-    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background-color: white;
-    box-shadow: 4px 4px 0px 0px rgba(45, 43, 42, 0.1);
+  .starfield {
+    background: radial-gradient(circle at center, #111 0%, #050505 100%);
+    background-image: 
+      radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+      radial-gradient(1px 1px at 50px 160px, #ddd, rgba(0,0,0,0)),
+      radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+      radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0));
+    background-repeat: repeat;
+    background-size: 200px 200px;
+    animation: drift 120s linear infinite;
   }
-  .sketchy-box:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0px 0px rgba(45, 43, 42, 0.15);
-  }
-  .btn-storybook {
-    @apply relative inline-flex items-center justify-center px-8 py-3 font-bold text-white transition-all duration-200 bg-[#F38020] hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
-    border: 2px solid #2D2B2A;
-    border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-  }
-  .brush-underline {
-    @apply relative inline-block;
-  }
-  .brush-underline::after {
-    content: "";
-    @apply absolute -bottom-1 left-0 w-full h-2 bg-[#F38020]/30 -z-10;
-    border-radius: 100% 5% 100% 5% / 5% 100% 5% 100%;
-    transform: rotate(-1deg);
-  }
-  .sketchy-shake:hover {
-    animation: sketchy-shake 0.4s ease-in-out infinite;
-  }
-  .canvas-texture {
-    background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+  .crt-overlay {
     pointer-events: none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
+    z-index: 9999;
   }
-  .artisan-signature {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    letter-spacing: 0.1em;
-    font-weight: 700;
+  .system-frame {
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    background: rgba(5, 5, 5, 0.8);
+    backdrop-filter: blur(8px);
   }
-  .gold-leaf-border {
-    border-image: linear-gradient(to right, #2D2B2A, #F38020, #2D2B2A) 1;
+  .design-transition {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #050505;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #00ff41;
+    border-radius: 2px;
   }
 }
-@keyframes sketchy-shake {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(0.5deg) translate(0.5px, 0.5px); }
-  50% { transform: rotate(-0.5deg) translate(-0.5px, -0.5px); }
-  75% { transform: rotate(0.25deg) translate(0.5px, -0.5px); }
-  100% { transform: rotate(0deg); }
+@keyframes drift {
+  from { background-position: 0 0; }
+  to { background-position: 200px 400px; }
 }
-@keyframes draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-.animate-draw {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: draw 2s ease-out forwards;
+.hud-text {
+  text-shadow: 0 0 5px #00ff41;
 }

@@ -1,79 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Square, SkipBack, SkipForward } from 'lucide-react';
+import { Play, Square, SkipBack, SkipForward, Volume2, ListMusic } from 'lucide-react';
 import { motion } from 'framer-motion';
 const PLAYLIST = [
-  { id: 1, title: 'Bubbles', duration: '03:42' },
-  { id: 2, title: 'Neon_Pulse', duration: '04:15' },
-  { id: 3, title: 'Sub_Trace', duration: '02:58' },
+  { id: 1, title: 'NEON_DISTRICT', duration: '03:42' },
+  { id: 2, title: 'SYNTH_PULSE_01', duration: '04:15' },
+  { id: 3, title: 'KOWLOON_NIGHTS', duration: '02:58' },
 ];
-interface HUDPlayerProps {
-  isVisible: boolean;
-}
-export function HUDPlayer({ isVisible }: HUDPlayerProps) {
+export function HUDPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (isPlaying && isVisible) {
+    let interval: any;
+    if (isPlaying) {
       interval = setInterval(() => {
-        setProgress(p => (p + 0.1) % 100);
+        setProgress(p => (p + 0.5) % 100);
       }, 100);
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isPlaying, isVisible]);
-  if (!isVisible) return null;
-  const trackName = `SYSTEM // ${decodeURI(PLAYLIST[currentTrackIndex].title).toUpperCase()}`;
+    return () => clearInterval(interval);
+  }, [isPlaying]);
   return (
-    <motion.div 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className="fixed top-0 left-1/2 -translate-x-1/2 z-[100] w-fit flex flex-col items-center bg-system-bg border-b border-x border-cyber-green/40 p-2 shadow-[0_0_20px_rgba(0,255,65,0.1)]"
-    >
-      <div className="flex items-center gap-1 mb-2">
-        <button 
-          onClick={() => setCurrentTrackIndex(p => (p - 1 + PLAYLIST.length) % PLAYLIST.length)}
-          className="p-btn scale-75 !px-2"
-        >
-          <SkipBack className="w-4 h-4 fill-current" />
+    <div className="flex flex-col md:flex-row items-center gap-6 max-w-7xl mx-auto w-full">
+      {/* Controls */}
+      <div className="flex items-center gap-4 bg-cyber-green/5 border border-cyber-green/20 px-6 py-3">
+        <button onClick={() => setCurrentTrackIndex(prev => (prev - 1 + PLAYLIST.length) % PLAYLIST.length)}>
+          <SkipBack className="w-4 h-4 hover:text-cyber-pink transition-colors" />
         </button>
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
-          className="p-btn scale-90"
+          className="w-10 h-10 flex items-center justify-center bg-cyber-green text-system-bg hover:scale-105 transition-transform"
         >
-          {isPlaying ? <Square className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+          {isPlaying ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
         </button>
-        <button 
-          onClick={() => setIsPlaying(false)}
-          className="p-btn scale-75 !px-2"
-        >
-          <Square className="w-4 h-4" />
-        </button>
-        <button 
-          onClick={() => setCurrentTrackIndex(p => (p + 1) % PLAYLIST.length)}
-          className="p-btn scale-75 !px-2"
-        >
-          <SkipForward className="w-4 h-4 fill-current" />
+        <button onClick={() => setCurrentTrackIndex(prev => (prev + 1) % PLAYLIST.length)}>
+          <SkipForward className="w-4 h-4 hover:text-cyber-pink transition-colors" />
         </button>
       </div>
-      <div className="flex flex-col items-center gap-1 min-w-[240px]">
-        <div className="flex justify-between w-full">
-          <span className="text-[9px] font-black tracking-widest text-cyber-green hud-text">
-            {trackName}
-          </span>
-          <span className="text-[9px] font-mono opacity-60">
-            {Math.floor(progress).toString().padStart(3, '0')}%
+      {/* Visualizer & Info */}
+      <div className="flex-1 w-full space-y-2">
+        <div className="flex justify-between items-end">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-cyber-green animate-pulse" />
+            <span className="text-[10px] tracking-[0.2em] font-bold">
+              NOW_PLAYING: {PLAYLIST[currentTrackIndex].title}
+            </span>
+          </div>
+          <span className="text-[10px] opacity-40 font-mono tracking-widest">
+            {Math.floor(progress / 10).toString().padStart(2, '0')}:{(progress % 10).toString().padStart(2, '0')} / {PLAYLIST[currentTrackIndex].duration}
           </span>
         </div>
-        <div className="w-full h-0.5 bg-cyber-green/10 relative">
+        <div className="h-1 bg-cyber-green/10 w-full relative">
           <motion.div 
-            className="absolute top-0 left-0 h-full bg-cyber-green shadow-[0_0_8px_#00ff41]"
+            className="absolute top-0 left-0 h-full bg-cyber-green shadow-[0_0_10px_#00ff41]" 
             animate={{ width: `${progress}%` }}
+            transition={{ ease: "linear" }}
           />
+          {/* Frequency Bars */}
+          <div className="absolute -top-6 left-0 right-0 flex items-end gap-[2px] opacity-20 pointer-events-none">
+            {Array.from({ length: 60 }).map((_, i) => (
+              <motion.div
+                key={i}
+                className="w-[2px] bg-cyber-green"
+                animate={{ height: isPlaying ? [2, Math.random() * 20, 2] : 2 }}
+                transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.02 }}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </motion.div>
+      {/* Meta */}
+      <div className="hidden lg:flex items-center gap-6 px-4 border-l border-cyber-green/20">
+        <div className="flex items-center gap-2">
+          <Volume2 className="w-4 h-4 opacity-40" />
+          <div className="w-16 h-1 bg-cyber-green/20">
+            <div className="w-3/4 h-full bg-cyber-green" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-cyber-green">
+          <ListMusic className="w-4 h-4" />
+          <span className="text-[10px] font-bold uppercase">PL_04</span>
+        </div>
+      </div>
+    </div>
   );
 }

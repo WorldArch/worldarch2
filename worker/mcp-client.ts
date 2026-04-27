@@ -4,8 +4,7 @@ interface MCPServerConfig {
   name: string;
   sseUrl: string;
 }
-const MCP_SERVERS: MCPServerConfig[] = [
-];
+const MCP_SERVERS: MCPServerConfig[] = [];
 export class MCPManager {
   private clients: Map<string, Client> = new Map();
   private toolMap: Map<string, string> = new Map();
@@ -16,7 +15,7 @@ export class MCPManager {
       try {
         const transport = new SSEClientTransport(new URL(serverConfig.sseUrl));
         const client = new Client({
-          name: 'cloudflare-agent',
+          name: 'worldarch-system',
           version: '1.0.0'
         }, {
           capabilities: {}
@@ -66,30 +65,18 @@ export class MCPManager {
   async executeTool(toolName: string, args: Record<string, unknown>): Promise<string> {
     await this.initialize();
     const serverName = this.toolMap.get(toolName);
-    if (!serverName) {
-      throw new Error(`Tool ${toolName} not found in any MCP server`);
-    }
+    if (!serverName) throw new Error(`Tool ${toolName} not found`);
     const client = this.clients.get(serverName);
-    if (!client) {
-      throw new Error(`Client for server ${serverName} not available`);
-    }
+    if (!client) throw new Error(`Client ${serverName} not available`);
     try {
-      const result = await client.callTool({
-        name: toolName,
-        arguments: args
-      });
-      if (result.isError) {
-        throw new Error(`Tool execution failed: ${Array.isArray(result.content) ? result.content.map((c: any) => c.text).join('\n') : 'Unknown error'}`);
-      }
+      const result = await client.callTool({ name: toolName, arguments: args });
+      if (result.isError) throw new Error('Tool execution failed');
       if (Array.isArray(result.content)) {
-        return result.content
-          .filter((c: any) => c.type === 'text')
-          .map((c: any) => c.text)
-          .join('\n');
+        return result.content.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('\n');
       }
-      return 'No content returned';
+      return 'No content';
     } catch (error) {
-      throw new Error(`Tool execution failed: ${String(error)}`);
+      throw new Error(`Execution error: ${String(error)}`);
     }
   }
 }
