@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 const DESIGNS = [
   { id: '1', title: 'CHASSIS_GEOMETRY', tag: 'REF_01', desc: '[ WIDE CHASSIS ] 12% LATERAL FLARE', url: '/evolution-audit.png' },
-  { id: '2', title: 'SURFACE_TOPOLOGY', tag: 'REF_02', desc: '[ CARBON_REINFORCED ] HIGH DENSITY', url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200' },
-  { id: '3', title: 'LIGHT_FLUX_MAP', tag: 'REF_03', desc: '[ OPTIC_ARRAY ] 450NM EMISSION', url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=1200' },
-  { id: '4', title: 'CORE_CHASSIS', tag: 'REF_04', desc: '[ INTERNAL_STRUT ] VERTICAL ALIGN', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=1200' },
+  { id: '2', title: 'SURFACE_TOPOLOGY', tag: 'REF_02', desc: '[ CARBON_REINFORCED ] HIGH DENSITY', url: '/material-audit.png' },
+  { id: '3', title: 'LIGHT_FLUX_MAP', tag: 'REF_03', desc: '[ OPTIC_ARRAY ] 450NM EMISSION', url: '/Gemini_G3.png' },
+  { id: '4', title: 'CORE_CHASSIS', tag: 'REF_04', desc: '[ INTERNAL_STRUT ] VERTICAL ALIGN', url: '/Gemini_G4.png' },
 ];
 export function DesignGrid() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
