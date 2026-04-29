@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 
 // UPDATE: Added the 'url' property to point to your files in the worldarch2 public folder
 const PLAYLIST = [
-  { id: 1, title: 'Bubbles', duration: '03:42', url: '/worldarch2/Bubbles.mp3' },
-  { id: 2, title: 'Soul_Breaks', duration: '02:15', url: '/worldarch2/soul breaks.mp3' },
-  { id: 3, title: 'Iano_Choppers', duration: '01:58', url: '/worldarch2/iano choppers.mp3' },
-  { id: 4, title: 'Ty_Who_2_Mashup', duration: '03:10', url: '/worldarch2/ty who 2 (Mashup).mp3' },
-  { id: 5, title: 'A0000002_18', duration: '00:45', url: '/worldarch2/A0000002 18.WAV' },
-  { id: 6, title: 'Instrumental_Master', duration: '04:20', url: '/worldarch2/(Instrumental).mp3' },
+  { id: 1, title: 'Bubbles', duration: '03:42', url: '/Bubbles.mp3' },
+  { id: 2, title: 'Soul_Breaks', duration: '02:15', url: '/soul%20breaks.mp3' },
+  { id: 3, title: 'Iano_Choppers', duration: '01:58', url: '/iano%20choppers.mp3' },
+  { id: 4, title: 'Ty_Who_2_Mashup', duration: '03:10', url: '/ty%20who%202%20(Mashup).mp3' },
+  { id: 5, title: 'A0000002_18', duration: '00:45', url: '/A0000002%2018.WAV' },
+  { id: 6, title: 'Instrumental_Master', duration: '04:20', url: '/(Instrumental).mp3' },
 ];
+
 
 interface HUDPlayerProps {
   isVisible: boolean;
