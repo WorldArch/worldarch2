@@ -12,7 +12,7 @@ type Section = 'SYNTHESIS' | 'CONCEPTS' | 'FASHION' | 'CHARACTER' | 'SYSTEM';
 export function SystemPage() {
   const [activeSection, setActiveSection] = useState<Section>('SYNTHESIS');
   return (
-    <div className="min-h-screen bg-system-bg text-cyber-green relative flex overflow-hidden">
+    
       <StarfieldCanvas />
       <div className="absolute inset-0 crt-overlay pointer-events-none" />
       <HUDPlayer isVisible={true} />
@@ -58,7 +58,7 @@ export function SystemPage() {
                     {[1,2,3,4].map(i => (
                       <div key={i} className="p-4 border border-cyber-green/20 bg-cyber-green/5">
                         <p className="text-[10px] font-mono mb-2">MODULE_STATUS_0{i}</p>
-                        <div className="h-1 bg-cyber-green/20 w-full overflow-hidden">
+                        <div className="h-1 bg-cyber-green/20 w-full overflow-x-hidden">
                           <motion.div 
                             className="h-full bg-cyber-green" 
                             animate={{ x: ['-100%', '100%'] }} 
