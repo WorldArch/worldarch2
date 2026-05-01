@@ -39,20 +39,18 @@ export async function executeTool(name: string, args: Record<string, unknown>): 
         await new Promise(resolve => setTimeout(resolve, 2500));
         const mockLibrary: Record<string, string[]> = {
           'watercolor': [
-            "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=1200",
-            "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=1200"
+            "/rugbypaintjeans.jpg ",
+            
           ],
           'charcoal-sketch': [
-            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200",
-            "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&q=80&w=1200"
+            "fullpaint.jpg"
           ],
           'vibrant-ink': [
-            "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&q=80&w=1200",
-            "https://images.unsplash.com/photo-1490312278390-ab6414ef8bb9?auto=format&fit=crop&q=80&w=1200"
+            "/fefullcrop.jpg",
+          
           ],
           'soft-pastel': [
-            "https://images.unsplash.com/photo-1515405295579-ba7b45403062?auto=format&fit=crop&q=80&w=1200",
-            "https://images.unsplash.com/photo-1554188248-986adbb73be4?auto=format&fit=crop&q=80&w=1200"
+            "/mafulljggng.jpg"
           ]
         };
         const pool = mockLibrary[style as string] || mockLibrary['watercolor'];
