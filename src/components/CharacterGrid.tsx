@@ -11,8 +11,6 @@ export function CharacterGrid() {
   const [tick, setTick] = useState(0);
   const [gameState, setGameState] = useState<GameState>('playing');
 
-  // --- ACTIONS ---
-  
   const resetGame = useCallback(() => {
     setPlayerPos({ x: 12, y: 8 });
     setGameState('playing');
@@ -28,16 +26,14 @@ export function CharacterGrid() {
     });
   }, [gameState]);
 
-  // --- GAME LOOP ---
-
+  // Main Ticker
   useEffect(() => {
     if (gameState !== 'playing') return;
     const interval = setInterval(() => setTick(t => t + 1), 50);
     return () => clearInterval(interval);
   }, [gameState]);
 
-  // --- INPUT HANDLING ---
-
+  // Input Listener
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (gameState !== 'playing') {
@@ -55,16 +51,13 @@ export function CharacterGrid() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [movePlayer, resetGame, gameState]);
 
-  // --- STREAM PHYSICS (RIDING THE CURRENT) ---
-
+  // Ride the stream - move player with water current
   useEffect(() => {
     if (gameState !== 'playing') return;
     const y = playerPos.y;
-    // Rows 2, 4, 6 move the player to the right
     if (y === 2 || y === 4 || y === 6) {
       if (tick % 4 === 0) {
         setPlayerPos(prev => {
-          // Check if player is on a stream before allowing the drift
           const offset = Math.floor(tick / 4) % COLS;
           const isStream = (prev.x - offset + COLS) % 8 < 3;
           if (isStream) {
@@ -76,21 +69,17 @@ export function CharacterGrid() {
     }
   }, [tick, playerPos.y, gameState]);
 
-  // --- CELL LOGIC ---
-
-  const getCellType = useCallback((x: number, y: number, ignorePlayer = false): CellType => {
-    // If we aren't specifically looking for the "ground" type, check for player
-    if (!ignorePlayer && x === playerPos.x && y === playerPos.y) return 'player';
+  // Logic to determine cell appearance
+  const getCellType = useCallback((x: number, y: number): CellType => {
+    if (x === playerPos.x && y === playerPos.y) return 'player';
     if (y === 0) return 'goal';
     
-    // Data Stream Rows (Safe to stay on)
     if (y === 2 || y === 4 || y === 6) {
       const offset = Math.floor(tick / 4) % COLS;
       const isStream = (x - offset + COLS) % 8 < 3;
       return isStream ? 'stream' : 'neutral';
     }
     
-    // Firewall Rows (Hazardous to touch)
     if (y === 3 || y === 5 || y === 7) {
       const offset = Math.floor(tick / 2) % COLS;
       const isHazard = (x + offset) % 10 < 2;
@@ -100,8 +89,7 @@ export function CharacterGrid() {
     return 'neutral';
   }, [playerPos.x, playerPos.y, tick]);
 
-  // --- COLLISION ENGINE ---
-
+  // Collision and Win Logic
   useEffect(() => {
     if (gameState !== 'playing') return;
     const { x, y } = playerPos;
@@ -111,29 +99,27 @@ export function CharacterGrid() {
       return;
     }
 
-    // Check what is UNDER the player (ignorePlayer = true)
-    const groundType = getCellType(x, y, true);
-
-    // Stream Collision Logic: On stream rows, ground MUST be 'stream'
+    // Check stream rows directly (bypass getCellType player override)
     if (y === 2 || y === 4 || y === 6) {
-      if (groundType !== 'stream') {
-        setGameState('dead');
-      }
+      const offset = Math.floor(tick / 4) % COLS;
+      const isStream = (x - offset + COLS) % 8 < 3;
+      if (!isStream) setGameState('dead');
     }
 
-    // Hazard Collision Logic: Cannot touch 'hazard' cells
-    if (groundType === 'hazard') {
-      setGameState('dead');
+    // Check hazard rows directly
+    if (y === 3 || y === 5 || y === 7) {
+      const offset = Math.floor(tick / 2) % COLS;
+      const isHazard = (x + offset) % 10 < 2;
+      if (isHazard) setGameState('dead');
     }
-  }, [tick, playerPos, gameState, getCellType]);
+  }, [tick, playerPos, gameState]);
 
-  // --- RENDER SCREENS ---
-
+  // Screen Displays
   if (gameState === 'dead') {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 bg-black p-8 border border-cyber-pink/40 min-h-[300px] cursor-pointer" onClick={resetGame}>
+      <div className="flex flex-col items-center justify-center gap-4 bg-black p-8 border border-cyber-pink/40 min-h-[300px]">
         <div className="text-cyber-pink text-2xl font-black tracking-widest animate-pulse">[ SYSTEM BREACH ]</div>
-        <div className="text-cyber-pink/60 text-xs font-mono tracking-wider">CONNECTION TERMINATED // PACKET LOST</div>
+        <div className="text-cyber-pink/60 text-xs font-mono tracking-wider uppercase">Connection Terminated // Node Lost</div>
         <div className="text-white/30 text-[9px] font-mono tracking-widest mt-4 uppercase">Press any key to reboot</div>
       </div>
     );
@@ -141,7 +127,7 @@ export function CharacterGrid() {
 
   if (gameState === 'won') {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 bg-black p-8 border border-cyber-green/40 min-h-[300px] cursor-pointer" onClick={resetGame}>
+      <div className="flex flex-col items-center justify-center gap-4 bg-black p-8 border border-cyber-green/40 min-h-[300px]">
         <div className="text-cyber-green text-2xl font-black tracking-widest">[ ACCESS_GRANTED ]</div>
         <div className="text-cyber-green/60 text-xs font-mono tracking-wider uppercase">Synthesis Reached // Coherence Stable</div>
         <div className="text-white/30 text-[9px] font-mono tracking-widest mt-4 animate-pulse uppercase">Press any key to reboot</div>
@@ -150,7 +136,7 @@ export function CharacterGrid() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 bg-black p-4 border border-cyber-green/20 backdrop-blur-md shadow-2xl">
+    <div className="flex flex-col items-center gap-4 bg-black p-4 border border-cyber-green/20 backdrop-blur-md">
       <div 
         className="grid gap-px bg-cyber-green/5 p-1 border border-cyber-green/10"
         style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}
@@ -169,7 +155,7 @@ export function CharacterGrid() {
               return (
                 <div
                   key={`cell-${x}-${y}`}
-                  className={`w-3 h-3 sm:w-5 sm:h-5 md:w-6 md:h-6 flex items-center justify-center transition-all duration-75 ${bgColor}`}
+                  className={`w-3 h-3 sm:w-5 sm:h-5 md:w-6 md:h-6 flex items-center justify-center transition-colors duration-100 ${bgColor}`}
                 >
                   {type === 'player' && <span className="text-black text-[10px] font-bold">█</span>}
                 </div>
