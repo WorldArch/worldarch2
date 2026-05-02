@@ -7,7 +7,7 @@ const PLAYLIST = [
   { id: 2, title: 'Soul_Breaks', duration: '02:15', url: '/soul_breaks.mp3' },
   { id: 3, title: 'Iano_Choppers', duration: '01:58', url: '/iano_choppers.mp3' },
   { id: 4, title: 'Ty_Who_2_Mashup', duration: '03:10', url: '/ty_who_2_(Mashup).mp3' },
-  { id: 5, title: 'A0000002_18', duration: '00:45', url: '/A0000002_18.WAV' },
+  { id: 5, title: 'A0000002_18', duration: '00:45', url: '/A0000002%2018.mp3' },
   { id: 6, title: 'Instrumental_Master', duration: '04:20', url: '/(Instrumental).mp3' },
 ];
 
