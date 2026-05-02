@@ -81,4 +81,14 @@ export function CharacterGrid() {
     if (y === 3 || y === 5 || y === 7) {
       const offset = Math.floor(tick / 2) % COLS;
       const isHazard = (x + offset) % 10 < 2;
-      if (is
+            if (isHazard) setGameState('dead');
+    }
+  }, [tick, playerPos.x, playerPos.y, gameState]);
+
+  if (gameState === 'dead') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 bg-black p-8 border border-cyber-pink/40 min-h-[300px]">
+        <div className="text-cyber-pink text-2xl font-black tracking-widest">[ SYSTEM BREACH ]</div>
+        <div className="text-cyber-pink/60 text-xs font-mono tracking-wider">CONNECTION TERMINATED</div>
+        <div cl
+
