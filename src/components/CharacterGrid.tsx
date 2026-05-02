@@ -1,37 +1,54 @@
 import React, { useState, useEffect, useCallback } from 'react';
+
 const COLS = 24;
 const ROWS = 9;
+
 type CellType = 'player' | 'stream' | 'hazard' | 'goal' | 'neutral';
+type GameState = 'playing' | 'dead' | 'won';
+
 export function CharacterGrid() {
   const [playerPos, setPlayerPos] = useState({ x: 12, y: 8 });
   const [tick, setTick] = useState(0);
+  const [gameState, setGameState] = useState<GameState>('playing');
+
+  const resetGame = useCallback(() => {
+    setPlayerPos({ x: 12, y: 8 });
+    setGameState('playing');
+  }, []);
+
   const movePlayer = useCallback((dx: number, dy: number) => {
+    if (gameState !== 'playing') return;
     setPlayerPos(prev => {
       const newX = Math.max(0, Math.min(COLS - 1, prev.x + dx));
       const newY = Math.max(0, Math.min(ROWS - 1, prev.y + dy));
       return { x: newX, y: newY };
     });
-  }, []);
+  }, [gameState]);
+
   const getCellType = useCallback((x: number, y: number): CellType => {
     if (x === playerPos.x && y === playerPos.y) return 'player';
     if (y === 0) return 'goal';
-    // Row Logic for Obstacles
     if (y === 2 || y === 4 || y === 6) {
-      // Streams (Moving Right)
       const offset = Math.floor(tick / 4) % COLS;
       const isStream = (x - offset + COLS) % 8 < 3;
       return isStream ? 'stream' : 'neutral';
     }
     if (y === 3 || y === 5 || y === 7) {
-      // Hazards (Moving Left)
       const offset = Math.floor(tick / 2) % COLS;
       const isHazard = (x + offset) % 10 < 2;
       return isHazard ? 'hazard' : 'neutral';
     }
     return 'neutral';
   }, [playerPos.x, playerPos.y, tick]);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      if (gameState !== 'playing') {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+          resetGame();
+        }
+        return;
+      }
       if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
       if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
       if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
@@ -39,24 +56,46 @@ export function CharacterGrid() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [movePlayer]);
+  }, [movePlayer, resetGame, gameState]);
+
   useEffect(() => {
+    if (gameState !== 'playing') return;
     const interval = setInterval(() => setTick(t => t + 1), 50);
     return () => clearInterval(interval);
-  }, []);
-  // Collision detection
+  }, [gameState]);
+
   useEffect(() => {
+    if (gameState !== 'playing') return;
     const type = getCellType(playerPos.x, playerPos.y);
-    // Hazard collision or missing stream on water rows
     const isWaterRow = playerPos.y === 2 || playerPos.y === 4 || playerPos.y === 6;
     if (type === 'hazard' || (isWaterRow && type === 'neutral')) {
-      setPlayerPos({ x: 12, y: 8 });
+      setGameState('dead');
     }
     if (type === 'goal') {
-      alert("SYNTHESIS_REACHED: COHERENCE_STABLE");
-      setPlayerPos({ x: 12, y: 8 });
+      setGameState('won');
     }
-  }, [tick, playerPos.x, playerPos.y, getCellType]);
+  }, [tick, playerPos.x, playerPos.y, getCellType, gameState]);
+
+  if (gameState === 'dead') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 bg-black p-8 border border-cyber-pink/40 min-h-[300px]">
+        <div className="text-cyber-pink text-2xl font-black tracking-widest">[ SYSTEM BREACH ]</div>
+        <div className="text-cyber-pink/60 text-xs font-mono tracking-wider">CONNECTION TERMINATED</div>
+        <div className="text-white/30 text-[9px] font-mono tracking-widest mt-4 animate-pulse">PRESS ANY KEY TO REBOOT</div>
+      </div>
+    );
+  }
+
+  if (gameState === 'won') {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 bg-black p-8 border border-cyber-green/40 min-h-[300px]">
+        <div className="text-cyber-green text-2xl font-black tracking-widest">[ ACCESS_GRANTED ]</div>
+        <div className="text-cyber-green/60 text-xs font-mono tracking-wider">SYNTHESIS_REACHED: COHERENCE_STABLE</div>
+        <div className="text-white/30 text-[9px] font-mono tracking-widest mt-4 animate-pulse">PRESS ANY KEY TO REBOOT</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center gap-4 bg-black p-4 border border-cyber-green/20">
       <div className="grid grid-cols-24 gap-px w-fit bg-cyber-green/5 p-1 border border-cyber-green/10">
