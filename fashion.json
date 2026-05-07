@@ -1,1 +1,6 @@
-{"images":[{"url":"topographsetfem.png","label":"SESSION_01 // SAMPLE_V1"},{"url":"splatcargofem.png","label":"SESSION_01 // LOOK_02"},{"url":"fefullcrop.jpg","label":"SESSION_02 // FULL_CROP"},{"url":"fefullwaleish.jpg","label":"SESSION_02 // WALEISH_V1"},{"url":"fefullwaleish2.jpg","label":"SESSION_02 // WALEISH_V2"},{"url":"febottom.jpg","label":"SESSION_02 // DETAIL"},{"url":"fullpaint.jpg","label":"SESSION_03 // PAINT_V1"},{"url":"fullpaint2.jpg","label":"SESSION_03 // PAINT_V2"},{"url":"mafulljggng.jpg","label":"SESSION_04 // TEXTURE_V1"},{"url":"mafulljggng2.jpg","label":"SESSION_04 // TEXTURE_V2"},{"url":"majalperu.jpg","label":"SESSION_05 // TRAVELS"}]}
+{"images":[{"url":"/topographsetfem.png","label":"SESSION_01 // SAMPLE_V1"},{"url":"/splatcargofem.png","label":"SESSION_01 // LOOK_02"},
+  {"url":"/fefullcrop.jpg","label":"SESSION_02 // FULL_CROP"},{"url":"/fefullwaleish.jpg","label":"SESSION_02 // WALEISH_V1"},
+  {"url":"/fefullwaleish2.jpg","label":"SESSION_02 // WALEISH_V2"},{"url":"/febottom.jpg","label":"SESSION_02 // DETAIL"},
+  {"url":"/fullpaint.jpg","label":"SESSION_03 // PAINT_V1"},{"url":"/fullpaint2.jpg","label":"SESSION_03 // PAINT_V2"},
+  {"url":"/mafulljggng.jpg","label":"SESSION_04 // TEXTURE_V1"},{"url":"/mafulljggng2.jpg","label":"SESSION_04 // TEXTURE_V2"},
+  {"url":"/majalperu.jpg","label":"SESSION_05 // TRAVELS"}]}
