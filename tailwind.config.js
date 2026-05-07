@@ -2,7 +2,22 @@
 export default {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
+    extend: {
+      colors: {
+        'cyber-green': '#00ff41',
+        'cyber-pink': '#ff0055',
+      },
+      fontFamily: {
+        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+      },
+    },
+  },
+  plugins: [],
+}
     extend: {
       gridTemplateColumns: {
         '24': 'repeat(24, minmax(0, 1fr))',
