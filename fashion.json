@@ -1,1 +1,15 @@
-
+{
+  "images": [
+    { "url": "images/fashion/topographsetfem.png", "label": "SESSION_01 // SAMPLE_V1" },
+    { "url": "images/fashion/splatcargofem.png", "label": "SESSION_01 // LOOK_02" },
+    { "url": "images/fashion/fefullcrop.jpg", "label": "SESSION_02 // FULL_CROP" },
+    { "url": "images/fashion/fefullwaleish.jpg", "label": "SESSION_02 // WALEISH_V1" },
+    { "url": "images/fashion/fefullwaleish2.jpg", "label": "SESSION_02 // WALEISH_V2" },
+    { "url": "images/fashion/febottom.jpg", "label": "SESSION_02 // DETAIL" },
+    { "url": "images/fashion/fullpaint.jpg", "label": "SESSION_03 // PAINT_V1" },
+    { "url": "images/fashion/fullpaint2.jpg", "label": "SESSION_03 // PAINT_V2" },
+    { "url": "images/fashion/mafulljggng.jpg", "label": "SESSION_04 // TEXTURE_V1" },
+    { "url": "images/fashion/mafulljggng2.jpg", "label": "SESSION_04 // TEXTURE_V2" },
+    { "url": "images/fashion/majalperu.jpg", "label": "SESSION_05 // TRAVELS" }
+  ]
+}
