@@ -8,7 +8,7 @@ export function FashionGrid() {
   const [items, setItems] = useState<FashionItem[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    fetch('/api/fashion')
+    fetch('/fashion.json')
       .then(res => res.json())
       .then(data => {
         setItems(data.images);
